@@ -1,0 +1,18 @@
+version: 2
+
+sources:
+  - name: fintrack_raw
+    description: >
+      Données brutes du système FinTrack, chargées telles quelles depuis
+      les fichiers sources dans le schéma RAW, sans transformation.
+    database: FINTRACK_DB
+    schema: RAW
+    tables:
+      - name: raw_comptes
+        description: Un enregistrement par compte bancaire client (courant, épargne, joint).
+      - name: raw_transactions
+        description: Un enregistrement par mouvement financier (crédit ou débit) sur un compte.
+      - name: raw_categories
+        description: Référentiel des catégories de dépenses/revenus (ex. Loyer, Salaire, Transport).
+      - name: raw_budgets
+        description: Budgets mensuels prévus par compte et par catégorie.

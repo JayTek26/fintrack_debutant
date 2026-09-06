@@ -1,0 +1,59 @@
+version: 2
+
+models:
+  - name: dim_comptes
+    description: >
+      Table de dimension des comptes clients, enrichie d'un champ
+      d'ancienneté calculé.
+    columns:
+      - name: compte_id
+        description: Identifiant unique du compte (clé primaire).
+      - name: anciennete_jours
+        description: Nombre de jours écoulés depuis l'ouverture du compte.
+
+  - name: dim_categories
+    description: Table de dimension des catégories de dépenses/revenus.
+    columns:
+      - name: categorie_id
+        description: Identifiant unique de la catégorie (clé primaire).
+
+  - name: fct_transactions
+    description: >
+      Table de faits des transactions validées uniquement. Point d'entrée
+      principal pour toute analyse financière.
+    columns:
+      - name: transaction_id
+        description: Identifiant unique de la transaction (clé primaire).
+        tests:
+          - unique
+          - not_null
+
+  - name: mart_solde_mensuel
+    description: >
+      Solde mensuel par compte : crédits, débits, solde net du mois et
+      solde cumulé depuis l'ouverture du compte (window function).
+    columns:
+      - name: compte_id
+        description: Compte concerné.
+      - name: mois
+        description: Mois concerné (premier jour du mois).
+      - name: solde_cumule
+        description: Solde cumulé du compte depuis son ouverture jusqu'à ce mois inclus.
+
+  - name: mart_budget_vs_reel
+    description: >
+      Comparaison des dépenses réelles aux budgets prévus, par compte,
+      catégorie et mois.
+    columns:
+      - name: ecart
+        description: Différence entre montant réel et montant prévu (positif = dépassement).
+      - name: depassement
+        description: Booléen indiquant si le montant réel dépasse le montant prévu.
+
+  - name: mart_top_depenses
+    description: >
+      Top 3 des catégories de dépenses par compte, classées par montant
+      total décroissant.
+    columns:
+      - name: rang
+        description: Rang de la catégorie pour ce compte (1 = dépense la plus élevée).

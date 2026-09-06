@@ -1,0 +1,95 @@
+version: 2
+
+models:
+  - name: stg_comptes
+    description: >
+      Modèle staging des comptes clients. Renomme les colonnes vers une
+      convention cohérente et normalise la casse du statut.
+    columns:
+      - name: compte_id
+        description: Identifiant unique du compte (clé primaire).
+        tests:
+          - unique
+          - not_null
+      - name: nom_client
+        description: Nom complet du titulaire du compte.
+      - name: type_compte
+        description: Type de compte détenu par le client.
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['courant', 'epargne', 'joint']
+      - name: statut
+        description: Statut actuel du compte, normalisé en minuscules.
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['actif', 'inactif', 'cloture']
+      - name: date_ouverture
+        description: Date d'ouverture du compte.
+      - name: solde_initial
+        description: Solde du compte à son ouverture, avant toute transaction.
+
+  - name: stg_transactions
+    description: >
+      Modèle staging des transactions. Ajoute une colonne montant_signe
+      (positif pour un crédit, négatif pour un débit) utilisée dans tous
+      les calculs de solde en aval.
+    columns:
+      - name: transaction_id
+        description: Identifiant unique de la transaction (clé primaire).
+        tests:
+          - unique
+          - not_null
+      - name: compte_id
+        description: Compte associé à la transaction.
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_comptes')
+                field: compte_id
+      - name: categorie_id
+        description: Catégorie associée à la transaction.
+      - name: date_transaction
+        description: Horodatage de la transaction, casté en TIMESTAMP_NTZ.
+      - name: montant
+        description: Montant brut de la transaction, toujours positif.
+      - name: type_operation
+        description: Nature de l'opération, credit ou debit.
+      - name: statut
+        description: Statut de validation de la transaction (validee, en_attente, annulee).
+      - name: montant_signe
+        description: Montant signé (+ si crédit, - si débit), calculé à partir de type_operation.
+
+  - name: stg_categories
+    description: >
+      Modèle staging des catégories de dépenses/revenus. Renomme les
+      colonnes pour éviter le mot réservé SQL "type".
+    columns:
+      - name: categorie_id
+        description: Identifiant unique de la catégorie (clé primaire).
+        tests:
+          - unique
+          - not_null
+      - name: nom_categorie
+        description: Nom lisible de la catégorie (ex. Loyer, Courses).
+      - name: type_categorie
+        description: Nature de la catégorie, revenu ou depense.
+      - name: groupe
+        description: Regroupement de plus haut niveau de la catégorie (ex. Logement, Alimentation).
+
+  - name: stg_budgets
+    description: >
+      Modèle staging des budgets mensuels. S'assure que la colonne mois
+      est bien typée en DATE.
+    columns:
+      - name: budget_id
+        description: Identifiant unique de la ligne de budget (clé primaire).
+      - name: compte_id
+        description: Compte concerné par ce budget.
+      - name: categorie_id
+        description: Catégorie concernée par ce budget.
+      - name: mois
+        description: Premier jour du mois concerné par le budget.
+      - name: montant_prevu
+        description: Montant budgété pour cette catégorie, ce compte et ce mois.
